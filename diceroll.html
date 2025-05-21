@@ -36,15 +36,21 @@
     let dicewareList = {};
 
     async function fetchWordList() {
-      const res = await fetch('./eff_short_wordlist_1.txt');
-      const text = await res.text();
-      const lines = text.split('\n');
-      lines.forEach(line => {
-        const [key, word] = line.trim().split('	');
-        if (key && word) {
-          dicewareList[key] = word;
-        }
-      });
+      try {
+        console.log("Fetching word list...");
+        const res = await fetch('./eff_short_wordlist_1.txt');
+        const text = await res.text();
+        const lines = text.split('\n');
+        lines.forEach(line => {
+          const [key, word] = line.trim().split('\t');
+          if (key && word) {
+            dicewareList[key] = word;
+          }
+        });
+        console.log("Word list loaded:", Object.keys(dicewareList).length, "entries");
+      } catch (error) {
+        console.error("Error fetching word list:", error);
+      }
     }
 
     function rollDie() {
@@ -57,8 +63,13 @@
 
     function getDicewareWord() {
       let roll;
+      let attempt = 0;
       do {
         roll = rollDice5();
+        attempt++;
+        if (attempt > 10) {
+          console.warn("Too many failed attempts finding roll:", roll);
+        }
       } while (!dicewareList[roll]);
       return dicewareList[roll];
     }
@@ -72,17 +83,22 @@
     }
 
     async function generatePasswords() {
-      if (Object.keys(dicewareList).length === 0) {
-        await fetchWordList();
-      }
-      const output = document.getElementById('passwords');
-      output.innerHTML = '';
-      for (let i = 0; i < 5; i++) {
-        const pw = generatePassword();
-        const div = document.createElement('div');
-        div.className = 'password';
-        div.textContent = pw;
-        output.appendChild(div);
+      try {
+        if (Object.keys(dicewareList).length === 0) {
+          await fetchWordList();
+        }
+        const output = document.getElementById('passwords');
+        output.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+          const pw = generatePassword();
+          console.log(`Password ${i + 1}:`, pw);
+          const div = document.createElement('div');
+          div.className = 'password';
+          div.textContent = pw;
+          output.appendChild(div);
+        }
+      } catch (error) {
+        console.error("Error generating passwords:", error);
       }
     }
 
