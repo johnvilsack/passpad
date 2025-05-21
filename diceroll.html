@@ -36,7 +36,7 @@
     let dicewareList = {};
 
     async function fetchWordList() {
-      const res = await fetch('https://www.eff.org/files/2016/09/08/eff_short_wordlist_1.txt');
+      const res = await fetch('./eff_short_wordlist_1.txt');
       const text = await res.text();
       const lines = text.split('\n');
       lines.forEach(line => {
