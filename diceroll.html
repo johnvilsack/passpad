@@ -25,6 +25,10 @@
       margin-top: 1rem;
       cursor: pointer;
     }
+    .error {
+      color: red;
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -40,16 +44,22 @@
         console.log("Fetching word list...");
         const res = await fetch('./eff_short_wordlist_1.txt');
         const text = await res.text();
-        const lines = text.split('\n');
-        lines.forEach(line => {
-          const [key, word] = line.trim().split('\t');
-          if (key && word) {
+        const lines = text.split(/\r?\n/);
+        lines.forEach((line, i) => {
+          const parts = line.trim().split('\t');
+          if (parts.length === 2) {
+            const key = parts[0].trim();
+            const word = parts[1].trim();
             dicewareList[key] = word;
+          } else if (line.trim()) {
+            console.warn(`Skipped malformed line ${i + 1}: "${line}"`);
           }
         });
         console.log("Word list loaded:", Object.keys(dicewareList).length, "entries");
       } catch (error) {
         console.error("Error fetching word list:", error);
+        document.getElementById('passwords').innerHTML =
+          '<div class="error">⚠️ Failed to load word list.</div>';
       }
     }
 
@@ -60,7 +70,6 @@
     function rollDice4() {
       return Array.from({ length: 4 }, () => rollDie()).join('');
     }
-
 
     function getDicewareWord() {
       let roll;
@@ -88,6 +97,10 @@
         if (Object.keys(dicewareList).length === 0) {
           await fetchWordList();
         }
+        if (Object.keys(dicewareList).length === 0) {
+          console.error("Word list is empty. Cannot generate passwords.");
+          return;
+        }
         const output = document.getElementById('passwords');
         output.innerHTML = '';
         for (let i = 0; i < 5; i++) {
@@ -100,10 +113,10 @@
         }
       } catch (error) {
         console.error("Error generating passwords:", error);
+        document.getElementById('passwords').innerHTML =
+          '<div class="error">⚠️ Error generating passwords.</div>';
       }
     }
-
-    generatePasswords();
   </script>
 </body>
 </html>
