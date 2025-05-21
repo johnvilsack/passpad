@@ -57,15 +57,16 @@
       return Math.floor(Math.random() * 6) + 1;
     }
 
-    function rollDice5() {
-      return Array.from({ length: 5 }, rollDie).join('');
+    function rollDice4() {
+      return Array.from({ length: 4 }, () => rollDie()).join('');
     }
+
 
     function getDicewareWord() {
       let roll;
       let attempt = 0;
       do {
-        roll = rollDice5();
+        roll = rollDice4();
         attempt++;
         if (attempt > 10) {
           console.warn("Too many failed attempts finding roll:", roll);
