@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diceware Password Generator</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f4f4f4;
+      padding: 2rem;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 1rem;
+    }
+    .password {
+      font-size: 1.5rem;
+      margin: 0.5rem 0;
+      word-break: break-word;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      margin-top: 1rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Diceware Password Generator</h1>
+  <div id="passwords"></div>
+  <button onclick="generatePasswords()">Generate Passwords</button>
+
+  <script>
+    let dicewareList = {};
+
+    async function fetchWordList() {
+      const res = await fetch('https://www.eff.org/files/2016/09/08/eff_short_wordlist_1.txt');
+      const text = await res.text();
+      const lines = text.split('\n');
+      lines.forEach(line => {
+        const [key, word] = line.trim().split('	');
+        if (key && word) {
+          dicewareList[key] = word;
+        }
+      });
+    }
+
+    function rollDie() {
+      return Math.floor(Math.random() * 6) + 1;
+    }
+
+    function rollDice5() {
+      return Array.from({ length: 5 }, rollDie).join('');
+    }
+
+    function getDicewareWord() {
+      let roll;
+      do {
+        roll = rollDice5();
+      } while (!dicewareList[roll]);
+      return dicewareList[roll];
+    }
+
+    function generatePassword() {
+      const words = Array.from({ length: 4 }, getDicewareWord);
+      words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+      const number = Math.floor(Math.random() * 90 + 10); // 2-digit number
+      const special = '!@#$%^&*?'[Math.floor(Math.random() * 9)];
+      return words.join('-') + '-' + number + special;
+    }
+
+    async function generatePasswords() {
+      if (Object.keys(dicewareList).length === 0) {
+        await fetchWordList();
+      }
+      const output = document.getElementById('passwords');
+      output.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        const pw = generatePassword();
+        const div = document.createElement('div');
+        div.className = 'password';
+        div.textContent = pw;
+        output.appendChild(div);
+      }
+    }
+
+    generatePasswords();
+  </script>
+</body>
+</html>
