@@ -5,7 +5,6 @@ import os
 import sys
 
 def resource_path(filename):
-    """Get path to resource, whether running in dev or PyInstaller bundle."""
     if getattr(sys, 'frozen', False):
         return os.path.join(sys._MEIPASS, filename)
     return os.path.join(os.path.abspath("."), filename)
@@ -48,33 +47,99 @@ def copy_to_clipboard(password):
     root.clipboard_append(password)
     root.update()
 
+def highlight_only(confirm_label, password):
+    confirm_label.config(text="Copied!", fg="white")
+    root.after(1000, lambda: confirm_label.config(text=""))
+    editable_entry.delete(0, tk.END)
+    editable_entry.insert(0, password)
+
 def generate_and_display():
-    output_frame.delete(0, tk.END)
+    for widget in output_frame.winfo_children():
+        widget.destroy()
+
     for _ in range(5):
         pw = generate_password(wordlist)
-        output_frame.insert(tk.END, pw)
 
-def on_select(event):
-    try:
-        selected = output_frame.get(output_frame.curselection())
-        copy_to_clipboard(selected)
-        messagebox.showinfo("Copied", f"Password copied to clipboard:\n{selected}")
-    except:
-        pass
+        row = tk.Frame(output_frame)
+        row.pack(pady=8)
+
+        content = tk.Frame(row)
+        content.pack()
+
+        label = tk.Label(
+            content,
+            text=pw,
+            font=("Courier", 16),
+            anchor="w",
+            padx=10,
+            pady=4,
+            width=30
+        )
+        label.pack(side=tk.LEFT)
+
+        copy_icon = tk.Label(
+            content,
+            text="📋",
+            font=("Arial", 16),
+            bg=root["bg"],
+            cursor="hand2",
+            padx=8
+        )
+        copy_icon.pack(side=tk.LEFT)
+
+        confirm_label = tk.Label(
+            content,
+            text="",
+            font=("Arial", 11),
+            fg="white",
+            bg=root["bg"],
+            width=8,
+            anchor="w"
+        )
+        confirm_label.pack(side=tk.LEFT)
+
+        def make_copy_handler(pw=pw, confirm_label=confirm_label):
+            def handler(event=None):
+                copy_to_clipboard(pw)
+                highlight_only(confirm_label, pw)
+            return handler
+
+        copy_icon.bind("<Button-1>", make_copy_handler())
+
+def copy_modified_password():
+    modified_pw = editable_entry.get()
+    if modified_pw.strip():
+        copy_to_clipboard(modified_pw)
+        modify_feedback.config(text="Copied!", fg="green")
+        root.after(1000, lambda: modify_feedback.config(text=""))
 
 # GUI setup
 root = tk.Tk()
 root.title("Diceware Password Generator")
-root.geometry("500x300")
+root.geometry("700x580")
 
-tk.Label(root, text="Click to generate secure passwords:").pack(pady=10)
-tk.Button(root, text="Generate Passwords", command=generate_and_display).pack(pady=5)
+tk.Label(root, text="Click to generate secure passwords:", font=("Arial", 14)).pack(pady=(15, 5))
+tk.Button(root, text="Generate Passwords", font=("Arial", 12), command=generate_and_display).pack(pady=5)
 
-output_frame = tk.Listbox(root, font=("Courier", 12), height=6)
+output_frame = tk.Frame(root)
 output_frame.pack(pady=10, fill=tk.BOTH, expand=True)
-output_frame.bind('<<ListboxSelect>>', on_select)
 
-# Load wordlist
+# Editable box + button
+edit_frame = tk.Frame(root)
+edit_frame.pack(pady=(20, 10))
+
+tk.Label(edit_frame, text="Editable Password:", font=("Arial", 12)).pack(anchor="w")
+
+editable_entry = tk.Entry(edit_frame, font=("Courier", 14), width=40)
+editable_entry.pack(side=tk.LEFT, padx=(0, 10))
+
+copy_mod_btn = tk.Button(edit_frame, text="Copy Modified", command=copy_modified_password)
+copy_mod_btn.pack(side=tk.LEFT)
+
+modify_feedback = tk.Label(edit_frame, text="", font=("Arial", 11), fg="green")
+modify_feedback.pack(side=tk.LEFT, padx=(10, 0))
+
+# Shared state
 wordlist = load_wordlist("eff_short_wordlist_1.txt")
 
 root.mainloop()

@@ -887,7 +887,7 @@
  [],
  False,
  False,
- 1747932508,
+ 1747935264,
  [('runw',
    '/nix/store/8lrjrpkln535hm9ggzbvcag1834f5mmi-python3.11-pyinstaller-6.13.0/lib/python3.11/site-packages/PyInstaller/bootloader/Darwin-64bit/runw',
    'EXECUTABLE')],
