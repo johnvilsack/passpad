@@ -4,6 +4,8 @@ A simple, secure, and offline-friendly Diceware password generator app for macOS
 
 This tool generates easy-to-remember yet high-entropy passwords using the [EFF Short Diceware Wordlist](https://www.eff.org/dice). It includes a user-friendly graphical interface with copy-to-clipboard support, password highlighting, and an editable text box for tweaks.
 
+Original online version here: https://johnvilsack.com/online_passpad/
+
 ---
 
 ## 🔐 Features
@@ -43,7 +45,4 @@ This tool generates easy-to-remember yet high-entropy passwords using the [EFF S
 
 MIT © [John Vilsack](https://github.com/johnvilsack)
 
----
- ## Web Version
 
-An original version was located here: https://johnvilsack.com/online_passpad/
