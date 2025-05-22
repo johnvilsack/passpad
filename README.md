@@ -42,3 +42,8 @@ This tool generates easy-to-remember yet high-entropy passwords using the [EFF S
 ## 📄 License
 
 MIT © [John Vilsack](https://github.com/johnvilsack)
+
+---
+ ## Web Version
+
+An original version was located here: https://johnvilsack.com/online_passpad/
