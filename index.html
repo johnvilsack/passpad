@@ -11,35 +11,56 @@
       padding: 2rem;
       text-align: center;
     }
+
     h1 {
       margin-bottom: 1rem;
     }
+
+    button, .copy-button {
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      margin: 0.5rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background-color: #007bff;
+      color: white;
+    }
+
+    button:hover, .copy-button:hover {
+      background-color: #0056b3;
+    }
+
     .password-row {
       display: flex;
       justify-content: center;
       align-items: center;
-      margin: 10px 0;
+      margin: 12px 0;
     }
+
     .password-box {
       font-family: monospace;
       font-size: 1.2rem;
-      padding: 8px 12px;
+      padding: 10px 12px;
       background: #fff;
       border-radius: 5px;
-      min-width: 350px;
+      width: 360px;
       text-align: left;
-      margin-right: 10px;
       transition: background 0.3s ease;
     }
+
     .highlight {
       background-color: #fff475;
       color: black;
     }
+
     .icon {
       cursor: pointer;
-      font-size: 1.3rem;
+      font-size: 1.4rem;
       user-select: none;
+      margin-left: 10px;
     }
+
     .copied-msg {
       width: 70px;
       text-align: left;
@@ -47,33 +68,41 @@
       font-size: 0.9rem;
       margin-left: 10px;
     }
+
     .editable-container {
-      margin-top: 2rem;
+      margin-top: 3rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
+
     .editable-input {
       font-family: monospace;
       font-size: 1.2rem;
       padding: 8px;
-      width: 350px;
+      width: 360px;
+      margin-right: 10px;
     }
-    .copy-button {
+
+    #edited-copied {
+      font-size: 0.9rem;
+      color: green;
       margin-left: 10px;
-      padding: 8px 12px;
-      font-size: 1rem;
-      cursor: pointer;
+      width: 70px;
+      text-align: left;
     }
   </style>
 </head>
 <body>
   <h1>Diceware Password Generator</h1>
   <button onclick="generatePasswords()">Generate Passwords</button>
+
   <div id="passwords"></div>
 
   <div class="editable-container">
-    <div><strong>Editable Password:</strong></div>
-    <input id="editable" class="editable-input" type="text" />
+    <input id="editable" class="editable-input" type="text" placeholder="Last copied password" />
     <button class="copy-button" onclick="copyEdited()">Copy Modified</button>
-    <span id="edited-copied" class="copied-msg"></span>
+    <span id="edited-copied"></span>
   </div>
 
   <script>
