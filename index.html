@@ -1,144 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Diceware Password Generator</title>
   <style>
     body {
       font-family: sans-serif;
-      background-color: #f4f4f4;
+      background: #f4f4f4;
       padding: 2rem;
       text-align: center;
     }
     h1 {
       margin-bottom: 1rem;
     }
-    .password {
-      font-size: 1.5rem;
-      margin: 0.5rem 0;
-      word-break: break-word;
+    .password-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 10px 0;
     }
-    button {
-      padding: 0.5rem 1rem;
+    .password-box {
+      font-family: monospace;
+      font-size: 1.2rem;
+      padding: 8px 12px;
+      background: #fff;
+      border-radius: 5px;
+      min-width: 350px;
+      text-align: left;
+      margin-right: 10px;
+      transition: background 0.3s ease;
+    }
+    .highlight {
+      background-color: #fff475;
+      color: black;
+    }
+    .icon {
+      cursor: pointer;
+      font-size: 1.3rem;
+      user-select: none;
+    }
+    .copied-msg {
+      width: 70px;
+      text-align: left;
+      color: green;
+      font-size: 0.9rem;
+      margin-left: 10px;
+    }
+    .editable-container {
+      margin-top: 2rem;
+    }
+    .editable-input {
+      font-family: monospace;
+      font-size: 1.2rem;
+      padding: 8px;
+      width: 350px;
+    }
+    .copy-button {
+      margin-left: 10px;
+      padding: 8px 12px;
       font-size: 1rem;
-      margin-top: 1rem;
       cursor: pointer;
     }
-    .error {
-      color: red;
-      margin-top: 1rem;
-    }
-    .password button {
-      font-size: 0.9rem;
-      padding: 0.3rem 0.6rem;
-    }
-
   </style>
 </head>
 <body>
   <h1>Diceware Password Generator</h1>
-  <div id="passwords"></div>
   <button onclick="generatePasswords()">Generate Passwords</button>
+  <div id="passwords"></div>
 
-<script>
-  let dicewareList = {};
+  <div class="editable-container">
+    <div><strong>Editable Password:</strong></div>
+    <input id="editable" class="editable-input" type="text" />
+    <button class="copy-button" onclick="copyEdited()">Copy Modified</button>
+    <span id="edited-copied" class="copied-msg"></span>
+  </div>
 
-  async function fetchWordList() {
-    try {
-      console.log("Fetching word list...");
-      const res = await fetch('./eff_short_wordlist_1.txt');
+  <script>
+    let dicewareList = {};
+    let lastHighlighted = null;
+
+    async function fetchWordlist() {
+      const res = await fetch("eff_short_wordlist_1.txt");
       const text = await res.text();
-      const lines = text.split(/\r?\n/);
-      lines.forEach((line, i) => {
-        const parts = line.trim().split('\t');
-        if (parts.length === 2) {
-          const key = parts[0].trim();
-          const word = parts[1].trim();
+      text.split(/\r?\n/).forEach(line => {
+        const [key, word] = line.trim().split("\t");
+        if (key && word) {
           dicewareList[key] = word;
-        } else if (line.trim()) {
-          console.warn(`Skipped malformed line ${i + 1}: "${line}"`);
         }
       });
-      console.log("Word list loaded:", Object.keys(dicewareList).length, "entries");
-    } catch (error) {
-      console.error("Error fetching word list:", error);
-      document.getElementById('passwords').innerHTML =
-        '<div class="error">⚠️ Failed to load word list.</div>';
     }
-  }
 
-  function rollDie() {
-    return Math.floor(Math.random() * 6) + 1;
-  }
+    function rollDice4() {
+      return Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1).join('');
+    }
 
-  function rollDice4() {
-    return Array.from({ length: 4 }, () => rollDie()).join('');
-  }
-
-  function getDicewareWord() {
-    let roll;
-    let attempt = 0;
-    do {
-      roll = rollDice4();
-      attempt++;
-      if (attempt > 10) {
-        console.warn("Too many failed attempts finding roll:", roll);
+    function getDicewareWord() {
+      for (let i = 0; i < 20; i++) {
+        const roll = rollDice4();
+        if (dicewareList[roll]) return dicewareList[roll];
       }
-    } while (!dicewareList[roll]);
-    return dicewareList[roll];
-  }
+      return 'oops';
+    }
 
-  function generatePassword() {
-    const words = Array.from({ length: 4 }, getDicewareWord);
-    words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
-    const number = Math.floor(Math.random() * 90 + 10); // 2-digit number
-    const special = '!@#$%^&*?'[Math.floor(Math.random() * 9)];
-    return words.join('-') + '-' + number + special;
-  }
+    function generatePassword() {
+      const words = Array.from({ length: 4 }, getDicewareWord);
+      words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+      const number = Math.floor(Math.random() * 90 + 10);
+      const special = '!@#$%^&*?'.charAt(Math.floor(Math.random() * 9));
+      return `${words.join('-')}-${number}${special}`;
+    }
 
-  async function generatePasswords() {
-    try {
-      if (Object.keys(dicewareList).length === 0) {
-        await fetchWordList();
-      }
-      if (Object.keys(dicewareList).length === 0) {
-        console.error("Word list is empty. Cannot generate passwords.");
-        return;
-      }
-      const output = document.getElementById('passwords');
-      output.innerHTML = '';
+    function generatePasswords() {
+      const container = document.getElementById('passwords');
+      container.innerHTML = '';
+      lastHighlighted = null;
+
       for (let i = 0; i < 5; i++) {
         const pw = generatePassword();
-        console.log(`Password ${i + 1}:`, pw);
 
-        const container = document.createElement('div');
-        container.className = 'password';
+        const row = document.createElement('div');
+        row.className = 'password-row';
 
-        const span = document.createElement('span');
-        span.textContent = pw;
+        const box = document.createElement('div');
+        box.className = 'password-box';
+        box.textContent = pw;
 
-        const btn = document.createElement('button');
-        btn.textContent = 'Copy';
-        btn.style.marginLeft = '1rem';
-        btn.onclick = () => {
-          navigator.clipboard.writeText(pw).then(() => {
-            const original = btn.textContent;
-            btn.textContent = '✅ Copied!';
-            setTimeout(() => { btn.textContent = original; }, 1500);
-          });
+        const icon = document.createElement('div');
+        icon.className = 'icon';
+        icon.textContent = '📋';
+
+        const copied = document.createElement('span');
+        copied.className = 'copied-msg';
+
+        icon.onclick = () => {
+          navigator.clipboard.writeText(pw);
+          if (lastHighlighted) lastHighlighted.classList.remove('highlight');
+          box.classList.add('highlight');
+          lastHighlighted = box;
+          copied.textContent = 'Copied!';
+          document.getElementById('editable').value = pw;
+          setTimeout(() => copied.textContent = '', 1000);
         };
 
-        container.appendChild(span);
-        container.appendChild(btn);
-        output.appendChild(container);
+        row.appendChild(box);
+        row.appendChild(icon);
+        row.appendChild(copied);
+        container.appendChild(row);
       }
-    } catch (error) {
-      console.error("Error generating passwords:", error);
-      document.getElementById('passwords').innerHTML =
-        '<div class="error">⚠️ Error generating passwords.</div>';
     }
-  }
-</script>
+
+    function copyEdited() {
+      const text = document.getElementById('editable').value;
+      if (text.trim()) {
+        navigator.clipboard.writeText(text);
+        const msg = document.getElementById('edited-copied');
+        msg.textContent = 'Copied!';
+        setTimeout(() => msg.textContent = '', 1000);
+      }
+    }
+
+    fetchWordlist();
+  </script>
 </body>
 </html>
