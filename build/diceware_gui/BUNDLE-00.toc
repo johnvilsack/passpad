@@ -1,3 +1,0 @@
-([('diceware_gui',
-   '/Users/johnv/Library/CloudStorage/OneDrive-ShippersSupply,Inc/Documents/GitHub/online_passpad/dist/diceware_gui',
-   'EXECUTABLE')],)
