@@ -29,6 +29,11 @@
       color: red;
       margin-top: 1rem;
     }
+    .password button {
+      font-size: 0.9rem;
+      padding: 0.3rem 0.6rem;
+    }
+
   </style>
 </head>
 <body>
@@ -36,87 +41,104 @@
   <div id="passwords"></div>
   <button onclick="generatePasswords()">Generate Passwords</button>
 
-  <script>
-    let dicewareList = {};
+<script>
+  let dicewareList = {};
 
-    async function fetchWordList() {
-      try {
-        console.log("Fetching word list...");
-        const res = await fetch('./eff_short_wordlist_1.txt');
-        const text = await res.text();
-        const lines = text.split(/\r?\n/);
-        lines.forEach((line, i) => {
-          const parts = line.trim().split('\t');
-          if (parts.length === 2) {
-            const key = parts[0].trim();
-            const word = parts[1].trim();
-            dicewareList[key] = word;
-          } else if (line.trim()) {
-            console.warn(`Skipped malformed line ${i + 1}: "${line}"`);
-          }
-        });
-        console.log("Word list loaded:", Object.keys(dicewareList).length, "entries");
-      } catch (error) {
-        console.error("Error fetching word list:", error);
-        document.getElementById('passwords').innerHTML =
-          '<div class="error">⚠️ Failed to load word list.</div>';
+  async function fetchWordList() {
+    try {
+      console.log("Fetching word list...");
+      const res = await fetch('./eff_short_wordlist_1.txt');
+      const text = await res.text();
+      const lines = text.split(/\r?\n/);
+      lines.forEach((line, i) => {
+        const parts = line.trim().split('\t');
+        if (parts.length === 2) {
+          const key = parts[0].trim();
+          const word = parts[1].trim();
+          dicewareList[key] = word;
+        } else if (line.trim()) {
+          console.warn(`Skipped malformed line ${i + 1}: "${line}"`);
+        }
+      });
+      console.log("Word list loaded:", Object.keys(dicewareList).length, "entries");
+    } catch (error) {
+      console.error("Error fetching word list:", error);
+      document.getElementById('passwords').innerHTML =
+        '<div class="error">⚠️ Failed to load word list.</div>';
+    }
+  }
+
+  function rollDie() {
+    return Math.floor(Math.random() * 6) + 1;
+  }
+
+  function rollDice4() {
+    return Array.from({ length: 4 }, () => rollDie()).join('');
+  }
+
+  function getDicewareWord() {
+    let roll;
+    let attempt = 0;
+    do {
+      roll = rollDice4();
+      attempt++;
+      if (attempt > 10) {
+        console.warn("Too many failed attempts finding roll:", roll);
       }
-    }
+    } while (!dicewareList[roll]);
+    return dicewareList[roll];
+  }
 
-    function rollDie() {
-      return Math.floor(Math.random() * 6) + 1;
-    }
+  function generatePassword() {
+    const words = Array.from({ length: 4 }, getDicewareWord);
+    words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+    const number = Math.floor(Math.random() * 90 + 10); // 2-digit number
+    const special = '!@#$%^&*?'[Math.floor(Math.random() * 9)];
+    return words.join('-') + '-' + number + special;
+  }
 
-    function rollDice4() {
-      return Array.from({ length: 4 }, () => rollDie()).join('');
-    }
-
-    function getDicewareWord() {
-      let roll;
-      let attempt = 0;
-      do {
-        roll = rollDice4();
-        attempt++;
-        if (attempt > 10) {
-          console.warn("Too many failed attempts finding roll:", roll);
-        }
-      } while (!dicewareList[roll]);
-      return dicewareList[roll];
-    }
-
-    function generatePassword() {
-      const words = Array.from({ length: 4 }, getDicewareWord);
-      words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
-      const number = Math.floor(Math.random() * 90 + 10); // 2-digit number
-      const special = '!@#$%^&*?'[Math.floor(Math.random() * 9)];
-      return words.join('-') + '-' + number + special;
-    }
-
-    async function generatePasswords() {
-      try {
-        if (Object.keys(dicewareList).length === 0) {
-          await fetchWordList();
-        }
-        if (Object.keys(dicewareList).length === 0) {
-          console.error("Word list is empty. Cannot generate passwords.");
-          return;
-        }
-        const output = document.getElementById('passwords');
-        output.innerHTML = '';
-        for (let i = 0; i < 5; i++) {
-          const pw = generatePassword();
-          console.log(`Password ${i + 1}:`, pw);
-          const div = document.createElement('div');
-          div.className = 'password';
-          div.textContent = pw;
-          output.appendChild(div);
-        }
-      } catch (error) {
-        console.error("Error generating passwords:", error);
-        document.getElementById('passwords').innerHTML =
-          '<div class="error">⚠️ Error generating passwords.</div>';
+  async function generatePasswords() {
+    try {
+      if (Object.keys(dicewareList).length === 0) {
+        await fetchWordList();
       }
+      if (Object.keys(dicewareList).length === 0) {
+        console.error("Word list is empty. Cannot generate passwords.");
+        return;
+      }
+      const output = document.getElementById('passwords');
+      output.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        const pw = generatePassword();
+        console.log(`Password ${i + 1}:`, pw);
+
+        const container = document.createElement('div');
+        container.className = 'password';
+
+        const span = document.createElement('span');
+        span.textContent = pw;
+
+        const btn = document.createElement('button');
+        btn.textContent = 'Copy';
+        btn.style.marginLeft = '1rem';
+        btn.onclick = () => {
+          navigator.clipboard.writeText(pw).then(() => {
+            const original = btn.textContent;
+            btn.textContent = '✅ Copied!';
+            setTimeout(() => { btn.textContent = original; }, 1500);
+          });
+        };
+
+        container.appendChild(span);
+        container.appendChild(btn);
+        output.appendChild(container);
+      }
+    } catch (error) {
+      console.error("Error generating passwords:", error);
+      document.getElementById('passwords').innerHTML =
+        '<div class="error">⚠️ Error generating passwords.</div>';
     }
-  </script>
+  }
+</script>
 </body>
 </html>
