@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Diceware Password Generator</title>
+  <title>Simple Password Generator</title>
   <style>
     body {
       font-family: sans-serif;
@@ -44,7 +44,7 @@
       padding: 10px 12px;
       background: #fff;
       border-radius: 5px;
-      width: 360px;
+      width: 260px;
       text-align: left;
       transition: background 0.3s ease;
     }
@@ -80,7 +80,7 @@
       font-family: monospace;
       font-size: 1.2rem;
       padding: 8px;
-      width: 360px;
+      width: 260px;
       margin-right: 10px;
     }
 
@@ -94,7 +94,7 @@
   </style>
 </head>
 <body>
-  <h1>Diceware Password Generator</h1>
+  <h1>Simple Password Generator</h1>
   <button onclick="generatePasswords()">Generate Passwords</button>
 
   <div id="passwords"></div>
@@ -104,8 +104,6 @@
     <button class="copy-button" onclick="copyEdited()">Copy Modified</button>
     <span id="edited-copied"></span>
   </div>
-
-  
 
   <script>
     let dicewareList = {};
@@ -122,11 +120,6 @@
       });
     }
 
-    window.onload = () => {
-      fetchWordlist();
-      document.getElementById('editable-container').style.display = 'none';
-    };
-
     function rollDice4() {
       return Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1).join('');
     }
@@ -140,11 +133,11 @@
     }
 
     function generatePassword() {
-      const words = Array.from({ length: 4 }, getDicewareWord);
-      words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
-      const number = Math.floor(Math.random() * 90 + 10);
+      const word = getDicewareWord();
+      const capitalized = word.charAt(0).toUpperCase() + word.slice(1);
       const special = '!@#$%^&*?'.charAt(Math.floor(Math.random() * 9));
-      return `${words.join('-')}-${number}${special}`;
+      const number = String(Math.floor(1000 + Math.random() * 9000)); // 4-digit number
+      return `${capitalized}${special}${number}`;
     }
 
     function generatePasswords() {
@@ -175,11 +168,8 @@
           box.classList.add('highlight');
           lastHighlighted = box;
           copied.textContent = 'Copied!';
-
-          const editable = document.getElementById('editable');
-          editable.value = pw;
+          document.getElementById('editable').value = pw;
           document.getElementById('editable-container').style.display = 'flex';
-
           setTimeout(() => copied.textContent = '', 1000);
         };
 
@@ -200,7 +190,10 @@
       }
     }
 
-    fetchWordlist();
+    window.onload = () => {
+      fetchWordlist();
+      document.getElementById('editable-container').style.display = 'none';
+    };
   </script>
 </body>
 </html>
