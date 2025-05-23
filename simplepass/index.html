@@ -116,7 +116,7 @@
     let lastHighlighted = null;
 
     async function fetchWordlist() {
-      const res = await fetch("eff_short_wordlist_1.txt");
+      const res = await fetch("../eff_short_wordlist_1.txt");
       const text = await res.text();
       text.split(/\r?\n/).forEach(line => {
         const [key, word] = line.trim().split("\t");
