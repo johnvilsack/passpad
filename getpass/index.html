@@ -3,51 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Password Generator API</title>
+  <title>Password API</title>
 </head>
 <body>
-  <div id="password-output">Loading...</div>
-  
   <script>
-    // Embedded wordlist (subset of EFF short list for reliability)
-    const dicewareList = {
-      "1111": "acid", "1112": "acne", "1113": "acre", "1114": "acts", "1115": "afar", "1116": "aged",
-      "1121": "aide", "1122": "aids", "1123": "aims", "1124": "ales", "1125": "alps", "1126": "amid",
-      "1131": "anew", "1132": "ante", "1133": "ants", "1134": "arch", "1135": "area", "1136": "army",
-      "1141": "arts", "1142": "asia", "1143": "aunt", "1144": "auto", "1145": "away", "1146": "axes",
-      "1151": "axis", "1152": "back", "1153": "bail", "1154": "bait", "1155": "ball", "1156": "band",
-      "1161": "bang", "1162": "bank", "1163": "bare", "1164": "bark", "1165": "barn", "1166": "base",
-      "2111": "bash", "2112": "bath", "2113": "beam", "2114": "bean", "2115": "bear", "2116": "beat",
-      "2121": "beef", "2122": "been", "2123": "beer", "2124": "bell", "2125": "belt", "2126": "bend",
-      "2131": "best", "2132": "beta", "2133": "bias", "2134": "bike", "2135": "bill", "2136": "bind",
-      "2141": "bird", "2142": "bite", "2143": "blow", "2144": "blue", "2145": "boat", "2146": "body",
-      "2151": "bolt", "2152": "bomb", "2153": "bond", "2154": "bone", "2155": "book", "2156": "boom",
-      "2161": "boot", "2162": "bore", "2163": "boss", "2164": "both", "2165": "bowl", "2166": "bulk",
-      "3111": "burn", "3112": "bush", "3113": "busy", "3114": "buzz", "3115": "cafe", "3116": "cage",
-      "3121": "cake", "3122": "call", "3123": "calm", "3124": "came", "3125": "camp", "3126": "card",
-      "3131": "care", "3132": "cart", "3133": "case", "3134": "cash", "3135": "cast", "3136": "cave",
-      "3141": "cell", "3142": "chat", "3143": "chip", "3144": "cite", "3145": "city", "3146": "club",
-      "3151": "coal", "3152": "coat", "3153": "code", "3154": "coin", "3155": "cold", "3156": "come",
-      "3161": "cook", "3162": "cool", "3163": "cope", "3164": "copy", "3165": "core", "3166": "cork",
-      "4111": "corn", "4112": "cost", "4113": "cozy", "4114": "crew", "4115": "crop", "4116": "crow",
-      "4121": "cube", "4122": "cure", "4123": "cute", "4124": "dad", "4125": "dame", "4126": "damp",
-      "4131": "dark", "4132": "dart", "4133": "data", "4134": "date", "4135": "dawn", "4136": "days",
-      "4141": "dead", "4142": "deaf", "4143": "deal", "4144": "dear", "4145": "debt", "4146": "deck",
-      "4151": "deed", "4152": "deep", "4153": "deer", "4154": "demo", "4155": "deny", "4156": "desk",
-      "4161": "dice", "4162": "died", "4163": "diet", "4164": "dime", "4165": "dirt", "4166": "dish",
-      "5111": "dock", "5112": "does", "5113": "done", "5114": "door", "5115": "dose", "5116": "down",
-      "5121": "doze", "5122": "drag", "5123": "draw", "5124": "drew", "5125": "drip", "5126": "drop",
-      "5131": "drug", "5132": "drum", "5133": "dual", "5134": "duck", "5135": "dude", "5136": "dune",
-      "5141": "dunk", "5142": "dusk", "5143": "dust", "5144": "duty", "5145": "each", "5146": "earl",
-      "5151": "earn", "5152": "ears", "5153": "ease", "5154": "east", "5155": "easy", "5156": "eats",
-      "5161": "echo", "5162": "edge", "5163": "edit", "5164": "else", "5165": "emit", "5166": "ends",
-      "6111": "epic", "6112": "even", "6113": "ever", "6114": "evil", "6115": "exit", "6116": "face",
-      "6121": "fact", "6122": "fail", "6123": "fair", "6124": "fall", "6125": "fame", "6126": "fare",
-      "6131": "farm", "6132": "fast", "6133": "fate", "6134": "fear", "6135": "feed", "6136": "feel",
-      "6141": "feet", "6142": "fell", "6143": "felt", "6144": "file", "6145": "fill", "6146": "film",
-      "6151": "find", "6152": "fine", "6153": "fire", "6154": "firm", "6155": "fish", "6156": "fist",
-      "6161": "fits", "6162": "five", "6163": "flag", "6164": "flat", "6165": "fled", "6166": "flew"
-    };
+    let dicewareList = {};
+    let isReady = false;
+
+    async function fetchWordlist() {
+      try {
+        const res = await fetch("../eff_short_wordlist_1.txt");
+        const text = await res.text();
+        text.split(/\r?\n/).forEach(line => {
+          const [key, word] = line.trim().split("\t");
+          if (key && word) {
+            dicewareList[key] = word;
+          }
+        });
+        isReady = true;
+        generateAndDisplay();
+      } catch (error) {
+        document.body.innerHTML = JSON.stringify({
+          error: "Failed to load wordlist",
+          message: error.message
+        });
+      }
+    }
 
     function rollDice4() {
       return Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1).join('');
@@ -58,7 +39,7 @@
         const roll = rollDice4();
         if (dicewareList[roll]) return dicewareList[roll];
       }
-      return 'word';
+      return 'oops';
     }
 
     function generatePassword() {
@@ -69,30 +50,37 @@
       return `${words.join('-')}-${number}${special}`;
     }
 
-    // Generate password immediately
-    const password = generatePassword();
-    
-    // Check if this looks like a programmatic request by checking user agent patterns
-    const isBot = /bot|crawler|spider|scraper|curl|wget|powershell|invoke-webrequest/i.test(navigator.userAgent);
-    
-    if (isBot || window.location.search.includes('plain=1')) {
-      // Return just the password for programmatic access
-      document.body.innerHTML = password;
-      document.body.style.fontFamily = 'monospace';
-      document.body.style.fontSize = '16px';
-      document.body.style.padding = '10px';
-    } else {
-      // Return JSON for browser access
+    function generateAndDisplay() {
+      if (!isReady) {
+        document.body.innerHTML = JSON.stringify({
+          error: "Wordlist not loaded yet",
+          message: "Please try again in a moment"
+        });
+        return;
+      }
+
+      const password = generatePassword();
       const result = {
         password: password,
         timestamp: new Date().toISOString(),
         success: true
       };
-      document.getElementById('password-output').textContent = JSON.stringify(result, null, 2);
-      document.body.style.fontFamily = 'monospace';
-      document.body.style.padding = '20px';
-      document.body.style.backgroundColor = '#f5f5f5';
+
+      document.body.innerHTML = JSON.stringify(result);
     }
+
+    // Start loading wordlist immediately
+    fetchWordlist();
+
+    // If wordlist takes time to load, show loading message
+    setTimeout(() => {
+      if (!isReady) {
+        document.body.innerHTML = JSON.stringify({
+          loading: true,
+          message: "Loading wordlist..."
+        });
+      }
+    }, 100);
   </script>
 </body>
 </html>
