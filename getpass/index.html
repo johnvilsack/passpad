@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password API</title>
+</head>
+<body>
+  <script>
+    let dicewareList = {};
+    let isReady = false;
+
+    async function fetchWordlist() {
+      try {
+        const res = await fetch("../eff_short_wordlist_1.txt");
+        const text = await res.text();
+        text.split(/\r?\n/).forEach(line => {
+          const [key, word] = line.trim().split("\t");
+          if (key && word) {
+            dicewareList[key] = word;
+          }
+        });
+        isReady = true;
+        generateAndDisplay();
+      } catch (error) {
+        document.body.innerHTML = JSON.stringify({
+          error: "Failed to load wordlist",
+          message: error.message
+        });
+      }
+    }
+
+    function rollDice4() {
+      return Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1).join('');
+    }
+
+    function getDicewareWord() {
+      for (let i = 0; i < 20; i++) {
+        const roll = rollDice4();
+        if (dicewareList[roll]) return dicewareList[roll];
+      }
+      return 'oops';
+    }
+
+    function generatePassword() {
+      const words = Array.from({ length: 4 }, getDicewareWord);
+      words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+      const number = Math.floor(Math.random() * 90 + 10);
+      const special = '!@#$%^&*?'.charAt(Math.floor(Math.random() * 9));
+      return `${words.join('-')}-${number}${special}`;
+    }
+
+    function generateAndDisplay() {
+      if (!isReady) {
+        document.body.innerHTML = JSON.stringify({
+          error: "Wordlist not loaded yet",
+          message: "Please try again in a moment"
+        });
+        return;
+      }
+
+      const password = generatePassword();
+      const result = {
+        password: password,
+        timestamp: new Date().toISOString(),
+        success: true
+      };
+
+      document.body.innerHTML = JSON.stringify(result);
+    }
+
+    // Start loading wordlist immediately
+    fetchWordlist();
+
+    // If wordlist takes time to load, show loading message
+    setTimeout(() => {
+      if (!isReady) {
+        document.body.innerHTML = JSON.stringify({
+          loading: true,
+          message: "Loading wordlist..."
+        });
+      }
+    }, 100);
+  </script>
+</body>
+</html>
