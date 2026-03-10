@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PassPad 2</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+    }
+
+    button, .copy-button {
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      margin: 0.5rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background-color: #007bff;
+      color: white;
+    }
+
+    button:hover, .copy-button:hover {
+      background-color: #0056b3;
+    }
+
+    .password-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 12px 0;
+    }
+
+    .password-box {
+      font-family: monospace;
+      font-size: 1.2rem;
+      padding: 10px 12px;
+      background: #fff;
+      border-radius: 5px;
+      width: 260px;
+      text-align: left;
+      transition: background 0.3s ease;
+    }
+
+    .highlight {
+      background-color: #fff475;
+      color: black;
+    }
+
+    .char-count {
+      width: 30px;
+      text-align: right;
+      font-size: 0.85rem;
+      color: #bbb;
+      margin-right: 8px;
+      font-family: monospace;
+    }
+
+    .icon {
+      cursor: pointer;
+      font-size: 1.4rem;
+      user-select: none;
+      margin-left: 10px;
+    }
+
+    .copied-msg {
+      width: 70px;
+      text-align: left;
+      color: green;
+      font-size: 0.9rem;
+      margin-left: 10px;
+    }
+
+    #editable-container {
+      margin-top: 3rem;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .editable-input {
+      font-family: monospace;
+      font-size: 1.2rem;
+      padding: 8px;
+      width: 260px;
+      margin-right: 10px;
+    }
+
+    #edited-copied {
+      font-size: 0.9rem;
+      color: green;
+      margin-left: 10px;
+      width: 70px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <h1>PassPad 2</h1>
+  <h2>Easy to remember, higher entropy passphrases</h2>
+  <button onclick="generatePasswords()">Generate Passwords</button>
+
+  <label style="font-size: 0.9rem; color: #555;">
+    <input type="checkbox" id="obfuscate" checked /> Pseudomix
+  </label>
+
+  <div id="passwords"></div>
+
+  <div id="editable-container">
+    <input id="editable" class="editable-input" type="text" placeholder="Last copied password" />
+    <button class="copy-button" onclick="copyEdited()">Copy Modified</button>
+    <span id="edited-copied"></span>
+  </div>
+
+  <div style="text-align: center; margin-top: 2rem;">
+    <a href="/passpad" style="font-size: 1.2rem; text-decoration: none; color: #007bff;">
+      Back to Original Passpad
+    </a>
+  </div>
+
+  <script>
+    let dicewareList = {};
+    let lastHighlighted = null;
+
+    async function fetchWordlist() {
+      const res = await fetch("../eff_long_wordlist_1.txt");
+      const text = await res.text();
+      text.split(/\r?\n/).forEach(line => {
+        const [key, word] = line.trim().split("\t");
+        if (key && word) {
+          dicewareList[key] = word;
+        }
+      });
+    }
+
+    function rollDice5() {
+      return Array.from({ length: 5 }, () => Math.floor(Math.random() * 6) + 1).join('');
+    }
+
+    function getDicewareWord() {
+      for (let i = 0; i < 20; i++) {
+        const roll = rollDice5();
+        if (dicewareList[roll]) return dicewareList[roll];
+      }
+      return 'oops';
+    }
+
+    function generatePassword() {
+      const word1 = getDicewareWord();
+      const word2 = getDicewareWord();
+      const word3 = getDicewareWord();
+      const obfuscate = document.getElementById('obfuscate').checked;
+      const w3 = obfuscate ? word3.slice(1) : word3;
+      const combined = word1.charAt(0).toUpperCase() + word1.slice(1) + word2 + w3;
+      const special = '!@#$%^&*?'.charAt(Math.floor(Math.random() * 9));
+      const number = String(Math.floor(1000 + Math.random() * 9000));
+      return `${combined}${special}${number}`;
+    }
+
+    function generatePasswords() {
+      const container = document.getElementById('passwords');
+      container.innerHTML = '';
+      lastHighlighted = null;
+
+      for (let i = 0; i < 5; i++) {
+        const pw = generatePassword();
+
+        const row = document.createElement('div');
+        row.className = 'password-row';
+
+        const box = document.createElement('div');
+        box.className = 'password-box';
+        box.textContent = pw;
+
+        const icon = document.createElement('div');
+        icon.className = 'icon';
+        icon.textContent = '📋';
+
+        const copied = document.createElement('span');
+        copied.className = 'copied-msg';
+
+        icon.onclick = () => {
+          navigator.clipboard.writeText(pw);
+          if (lastHighlighted) lastHighlighted.classList.remove('highlight');
+          box.classList.add('highlight');
+          lastHighlighted = box;
+          copied.textContent = 'Copied!';
+          document.getElementById('editable').value = pw;
+          document.getElementById('editable-container').style.display = 'flex';
+          setTimeout(() => copied.textContent = '', 1000);
+        };
+        const count = document.createElement('span');
+        count.className = 'char-count';
+        count.textContent = pw.length;
+
+        row.appendChild(count);
+        row.appendChild(box);
+        row.appendChild(icon);
+        row.appendChild(copied);
+        container.appendChild(row);
+      }
+    }
+
+    function copyEdited() {
+      const text = document.getElementById('editable').value;
+      if (text.trim()) {
+        navigator.clipboard.writeText(text);
+        const msg = document.getElementById('edited-copied');
+        msg.textContent = 'Copied!';
+        setTimeout(() => msg.textContent = '', 1000);
+      }
+    }
+
+    window.onload = () => {
+      fetchWordlist();
+      document.getElementById('editable-container').style.display = 'none';
+    };
+  </script>
+</body>
+</html>
