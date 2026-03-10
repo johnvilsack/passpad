@@ -54,6 +54,15 @@
       color: black;
     }
 
+    .char-count {
+      width: 30px;
+      text-align: right;
+      font-size: 0.85rem;
+      color: #bbb;
+      margin-right: 8px;
+      font-family: monospace;
+    }
+
     .icon {
       cursor: pointer;
       font-size: 1.4rem;
@@ -179,7 +188,11 @@
           document.getElementById('editable-container').style.display = 'flex';
           setTimeout(() => copied.textContent = '', 1000);
         };
+        const count = document.createElement('span');
+        count.className = 'char-count';
+        count.textContent = pw.length;
 
+        row.appendChild(count);
         row.appendChild(box);
         row.appendChild(icon);
         row.appendChild(copied);
