@@ -126,7 +126,7 @@
     let lastHighlighted = null;
 
     async function fetchWordlist() {
-      const res = await fetch("../eff_long_wordlist_1.txt");
+      const res = await fetch("../eff_short_wordlist_1.txt");
       const text = await res.text();
       text.split(/\r?\n/).forEach(line => {
         const [key, word] = line.trim().split("\t");
@@ -136,13 +136,13 @@
       });
     }
 
-    function rollDice5() {
-      return Array.from({ length: 5 }, () => Math.floor(Math.random() * 6) + 1).join('');
+    function rollDice4() {
+      return Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1).join('');
     }
 
     function getDicewareWord() {
       for (let i = 0; i < 20; i++) {
-        const roll = rollDice5();
+        const roll = rollDice4();
         if (dicewareList[roll]) return dicewareList[roll];
       }
       return 'oops';
